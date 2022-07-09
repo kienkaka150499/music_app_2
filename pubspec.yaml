@@ -36,7 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter_screenutil: ^5.5.3+2
   material_design_icons_flutter: ^5.0.6996
-  simple_timer: ^2.0.0
+  audioplayers: ^1.0.1
 
 dev_dependencies:
   flutter_test:

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:music_app_2/views/play_screen.dart';
 import 'package:music_app_2/widgets/side_menu.dart';
 
@@ -155,9 +156,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         isVertical = !isVertical;
                       });
                     },
-                    icon: const Icon(
-                      Icons.business,
+                    icon: Icon(
+                      isVertical?MdiIcons.viewModule:Icons.list,
                       color: Colors.white,
+                      size: 30,
                     ),
                   ),
                 )
