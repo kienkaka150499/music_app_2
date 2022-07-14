@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:music_app_2/assets.dart';
+import 'package:music_app_2/models/audio_asset_player.dart';
 import 'package:music_app_2/views/home_screen.dart';
 import 'package:music_app_2/views/play_screen.dart';
 
@@ -10,18 +11,18 @@ class SideMenu extends StatefulWidget {
   bool isShowMenu;
   String currentTab;
   bool micOn = true;
-  int time;
   int index;
   bool isPlaying;
+  AudioAssetPlayer player;
   Function(String) currentTabCallback;
 
   SideMenu(
       {required this.isShowMenu,
       required this.currentTab,
       required this.currentTabCallback,
-      required this.time,
       required this.index,
-      required this.isPlaying});
+      required this.isPlaying,
+      required this.player});
 
   @override
   State<StatefulWidget> createState() => _SideMenuState();
@@ -73,8 +74,10 @@ class _SideMenuState extends State<SideMenu> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) =>
-                                      (HomeScreen(widget.time, widget.index,widget.isPlaying))));
+                                  builder: (context) => (HomeScreen(
+                                      widget.player,
+                                      widget.index,
+                                      widget.isPlaying))));
                         },
                         child: Image.asset(
                           Assets.homeIconOutline,
@@ -121,7 +124,9 @@ class _SideMenuState extends State<SideMenu> {
                               context,
                               MaterialPageRoute(
                                   builder: (context) => PlayScreen(
-                                      time: widget.time, index: widget.index)));
+                                        index: widget.index,
+                                        player: widget.player,
+                                      )));
                         },
                         child: Image.asset(
                           Assets.playIcon,

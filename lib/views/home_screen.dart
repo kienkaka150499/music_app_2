@@ -8,14 +8,14 @@ import 'package:music_app_2/widgets/side_menu.dart';
 
 import '../assets.dart';
 import '../fake_datas.dart';
-import '../models/song.dart';
+import '../models/audio_asset_player.dart';
 
 class HomeScreen extends StatefulWidget {
-  int time;
   int index;
   bool isPlaying;
+  AudioAssetPlayer player = AudioAssetPlayer(songs[0].source, 0);
 
-  HomeScreen([this.time = 0, this.index = 0,this.isPlaying=false]);
+  HomeScreen(this.player, [this.index = 0, this.isPlaying = false]);
 
   @override
   State<StatefulWidget> createState() => _HomeScreenState();
@@ -24,11 +24,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool isShowMenu = false;
   String currentTab = Assets.homeIcon;
-  bool isVertical = true;
+  bool isVertical = false;
 
   @override
   initState() {
-    if(widget.isPlaying){
+    if (widget.isPlaying) {
       _updatePlayedTime();
     }
     super.initState();
@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _updatePlayedTime() {
     Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        widget.time++;
+        widget.player.timePlayed++;
       });
     });
   }
@@ -90,13 +90,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   SizedBox(
                     width: ScreenUtil().setWidth(10),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: TextField(
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                           hintText: 'Search',
                           hintStyle: TextStyle(color: Colors.white),
                           border: InputBorder.none),
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: ScreenUtil().setWidth(50)),
                     ),
                   )
                 ],
@@ -126,23 +128,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTrending() {
     return SizedBox(
-      height: ScreenUtil().setHeight(700),
+      height: ScreenUtil().setHeight(800),
       width: MediaQuery.of(context).size.width,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
+          Container(
+            padding: EdgeInsets.symmetric(vertical: ScreenUtil().setHeight(50)),
             width: ScreenUtil().setWidth(1000),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Trending',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 30,
+                      fontSize: ScreenUtil().setWidth(75),
                     ),
                     textAlign: TextAlign.left,
                   ),
@@ -157,9 +160,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       });
                     },
                     icon: Icon(
-                      isVertical?MdiIcons.viewModule:Icons.list,
+                      isVertical ? MdiIcons.viewModule : Icons.list,
                       color: Colors.white,
-                      size: 30,
+                      size: ScreenUtil().setWidth(75),
                     ),
                   ),
                 )
@@ -190,16 +193,18 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: InkWell(
                                 onTap: () {
                                   if (widget.index != index) {
-                                    widget.time = 0;
+                                    widget.player.timePlayed = 0;
                                     widget.index = index;
                                   }
                                   Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => PlayScreen(
-                                                time: widget.time,
-                                                index: widget.index,
-                                              )));
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => PlayScreen(
+                                        index: widget.index,
+                                        player: widget.player,
+                                      ),
+                                    ),
+                                  );
                                 },
                                 child: Image.asset(
                                   'assets/images/play_button.png',
@@ -220,17 +225,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                   children: [
                                     Text(
                                       songs[index].name,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 20,
+                                          fontSize: ScreenUtil().setWidth(50),
                                           fontWeight: FontWeight.bold),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     Text(
                                       songs[index].singer,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 15,
+                                        fontSize: ScreenUtil().setWidth(35),
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -241,94 +246,117 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       )
-                    : Container(
-                        padding: const EdgeInsets.only(right: 10),
-                        // width: ScreenUtil().setHeight(800),
-                        // height: ScreenUtil().setHeight(800),
-                        child: Stack(
-                          alignment: Alignment.bottomCenter,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: Image.network(
-                                songs[index].imageURL,
-                                width: ScreenUtil().setWidth(750),
-                                height: ScreenUtil().setHeight(550),
-                                fit: BoxFit.cover,
+                    : InkWell(
+                        onTap: () {
+                          if (widget.index != index) {
+                            widget.player.timePlayed = 0;
+                            widget.index = index;
+                          }
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PlayScreen(
+                                index: widget.index,
+                                player: widget.player,
                               ),
                             ),
-                            Positioned(
-                              bottom: ScreenUtil().setHeight(30),
-                              child: Container(
-                                width: ScreenUtil().setWidth(700),
-                                height: ScreenUtil().setHeight(150),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.6),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: EdgeInsets.only(
-                                          left: ScreenUtil().setWidth(20)),
-                                      child: InkWell(
-                                        onTap: () {
-                                          if (widget.index != index) {
-                                            widget.time = 0;
-                                            widget.index = index;
-                                          }
-                                          Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      PlayScreen(
-                                                        time: widget.time,
-                                                        index: widget.index,
-                                                      )));
-                                        },
-                                        child: Image.asset(
-                                          'assets/images/play_button_circle.png',
-                                          color: Colors.green,
-                                          width: ScreenUtil().setWidth(150),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: ScreenUtil().setWidth(20),
-                                        ),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              songs[index].name,
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            Text(
-                                              songs[index].singer,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 15,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  ],
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.only(right: 10),
+                          // width: ScreenUtil().setHeight(800),
+                          // height: ScreenUtil().setHeight(800),
+                          child: Stack(
+                            alignment: Alignment.bottomCenter,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Image.network(
+                                  songs[index].imageURL,
+                                  width: ScreenUtil().setWidth(750),
+                                  height: ScreenUtil().setHeight(750),
+                                  fit: BoxFit.cover,
                                 ),
                               ),
-                            )
-                          ],
+                              Positioned(
+                                bottom: ScreenUtil().setHeight(30),
+                                child: Container(
+                                  width: ScreenUtil().setWidth(700),
+                                  height: ScreenUtil().setHeight(150),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.6),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.only(
+                                            left: ScreenUtil().setWidth(20)),
+                                        child: InkWell(
+                                          onTap: () {
+                                            if (widget.index != index) {
+                                              widget.player.timePlayed = 0;
+                                              widget.index = index;
+                                            }
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    PlayScreen(
+                                                  index: widget.index,
+                                                  player: widget.player,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: Image.asset(
+                                            'assets/images/play_button_circle.png',
+                                            color: Colors.green,
+                                            width: ScreenUtil().setWidth(150),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal:
+                                                ScreenUtil().setWidth(20),
+                                          ),
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                songs[index].name,
+                                                style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: ScreenUtil()
+                                                        .setWidth(50),
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              Text(
+                                                songs[index].singer,
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize:
+                                                      ScreenUtil().setWidth(35),
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
                         ),
                       );
               },
@@ -350,12 +378,12 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Từ khóa',
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: 30,
+              fontSize: ScreenUtil().setWidth(75),
             ),
           ),
           Container(
@@ -379,7 +407,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Center(
                       child: Text(
                         categories[index],
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: ScreenUtil().setWidth(40)),
                       ),
                     ),
                   );
@@ -395,11 +425,13 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: const Text(
+          padding: EdgeInsets.symmetric(vertical: ScreenUtil().setHeight(75)),
+          child: Text(
             'Recently',
             style: TextStyle(
-                color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: ScreenUtil().setWidth(75),
+                fontWeight: FontWeight.bold),
           ),
         ),
         SizedBox(
@@ -429,17 +461,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Text(
                               songs[index].name,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 20,
+                                  fontSize: ScreenUtil().setWidth(50),
                                   fontWeight: FontWeight.bold),
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               songs[index].singer,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 15,
+                                fontSize: ScreenUtil().setWidth(35),
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -453,16 +485,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: InkWell(
                         onTap: () {
                           if (widget.index != index) {
-                            widget.time = 0;
+                            widget.player.timePlayed = 0;
                             widget.index = index;
                           }
                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => PlayScreen(
-                                        time: widget.time,
-                                        index: widget.index,
-                                      )));
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PlayScreen(
+                                index: widget.index,
+                                player: widget.player,
+                              ),
+                            ),
+                          );
                         },
                         child: Image.asset(
                           'assets/images/play_button.png',
@@ -495,13 +529,24 @@ class _HomeScreenState extends State<HomeScreen> {
               isShowMenu = !isShowMenu;
             });
           },
-          icon: Icon(isShowMenu ? Icons.chevron_left : Icons.menu),
+          icon: Icon(
+            isShowMenu ? Icons.chevron_left : Icons.menu,
+            size: ScreenUtil().setWidth(60),
+          ),
         ),
-        title: const Text('Home'),
+        title: Text(
+          'Home',
+          style: TextStyle(fontSize: ScreenUtil().setWidth(60)),
+        ),
         centerTitle: true,
         backgroundColor: Colors.purple,
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert))
+          IconButton(
+              onPressed: () {},
+              icon: Icon(
+                Icons.more_vert,
+                size: ScreenUtil().setWidth(60),
+              ))
         ],
       ),
       body: SafeArea(
@@ -514,9 +559,9 @@ class _HomeScreenState extends State<HomeScreen> {
               currentTabCallback: (tab) {
                 currentTab = tab;
               },
-              time: widget.time,
               index: widget.index,
               isPlaying: widget.isPlaying,
+              player: widget.player,
             ),
           ],
         ),

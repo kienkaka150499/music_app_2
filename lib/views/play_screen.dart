@@ -5,15 +5,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:music_app_2/assets.dart';
 import 'package:music_app_2/fake_datas.dart';
+import 'package:music_app_2/models/audio_asset_player.dart';
 import 'package:music_app_2/widgets/side_menu.dart';
 import 'dart:async';
 import '../models/song.dart';
 
 class PlayScreen extends StatefulWidget {
-  int time;
   int index;
+  AudioAssetPlayer player;
 
-  PlayScreen({required this.time, required this.index});
+  PlayScreen({required this.index,required this.player});
 
   @override
   State<StatefulWidget> createState() => _PlayScreenState();
@@ -31,7 +32,8 @@ class _PlayScreenState extends State<PlayScreen> with TickerProviderStateMixin {
   @override
   initState() {
     isPlay = true;
-    widget.time = widget.time;
+    widget.player=AudioAssetPlayer(songs[widget.index].source, widget.player.timePlayed);
+    widget.player.init();
     _updateTimeProgress();
     super.initState();
   }
@@ -41,28 +43,30 @@ class _PlayScreenState extends State<PlayScreen> with TickerProviderStateMixin {
     Timer.periodic(oneSec, (timer) {
       setState(() {
         if (!isPlay) {
+          widget.player.pause();
           timer.cancel();
         } else {
-          widget.time++;
-          _progressValue=widget.time/songs[widget.index].time;
-          if(widget.time==songs[widget.index].time){
+          // widget.player.timePlayed++;
+          widget.player.play();
+          _progressValue=widget.player.timePlayed/widget.player.audioDurationMS;
+          if(widget.player.timePlayed==widget.player.audioDurationMS){
             if(repeatIconTapCount==1){
-              widget.time=0;
+              widget.player.timePlayed=0;
             }else{
               if(repeatIconTapCount==2&&!isShuffle){
                 if(widget.index>=songs.length-1){
                   isPlay=false;
                 }else{
                   widget.index++;
-                  widget.time=0;
+                  widget.player.timePlayed=0;
                 }
               }else{
                 if(!isShuffle){
                   widget.index=(widget.index+1)%songs.length;
-                  widget.time=0;
+                  widget.player.timePlayed=0;
                 }else{
                   widget.index=Random().nextInt(songs.length-1);
-                  widget.time=0;
+                  widget.player.timePlayed=0;
                 }
               }
             }
@@ -77,7 +81,7 @@ class _PlayScreenState extends State<PlayScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
       padding: EdgeInsets.only(
         left: ScreenUtil().setWidth(isShowMenu ? 220 : 40),
-        right: ScreenUtil().setWidth(20),
+        right: ScreenUtil().setWidth(40),
         top: ScreenUtil().setHeight(20),
         bottom: ScreenUtil().setHeight(50),
       ),
@@ -97,57 +101,75 @@ class _PlayScreenState extends State<PlayScreen> with TickerProviderStateMixin {
           ),
           Text(
             songs[widget.index].name,
-            style: const TextStyle(color: Colors.white, fontSize: 20),
+            style: TextStyle(color: Colors.white,fontSize: ScreenUtil().setWidth(60)),
           ),
           Padding(
             padding: EdgeInsets.only(bottom: ScreenUtil().setHeight(50)),
             child: Text(
               songs[widget.index].singer,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(color: Colors.white,fontSize: ScreenUtil().setWidth(30)),
             ),
           ),
-          SizedBox(
+          Container(
+            padding: EdgeInsets.only(left: ScreenUtil().setWidth(20)),
             width: ScreenUtil().setWidth(1080),
             height: ScreenUtil().setHeight(120),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  onPressed: () {
+                InkWell(
+                  onTap: () {
                     setState(() {
                       songs[widget.index].favorite = !songs[widget.index].favorite;
                     });
                   },
-                  icon: Icon(
-                    songs[widget.index].favorite
-                        ? Icons.favorite
-                        : Icons.favorite_border,
-                    color: Colors.pink,
-                    size: ScreenUtil().setHeight(100),
+                  child: SizedBox(
+                    width: ScreenUtil().setWidth(80),
+                    height: ScreenUtil().setHeight(100),
+                    child: Icon(
+                      songs[widget.index].favorite
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      color: Colors.pink,
+                      size: ScreenUtil().setHeight(100),
+                    ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.download,
-                    color: Colors.white,
-                    size: ScreenUtil().setHeight(100),
+                InkWell(
+                  onTap: () {},
+                  child: SizedBox(
+                    width: ScreenUtil().setWidth(80),
+                    height: ScreenUtil().setHeight(100),
+                    child: Icon(
+                      Icons.download,
+                      color: Colors.white,
+                      size: ScreenUtil().setHeight(120),
+
+                    ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.comment,
-                    color: Colors.white,
-                    size: ScreenUtil().setHeight(100),
+                InkWell(
+                  onTap: () {},
+                  child: SizedBox(
+                    width: ScreenUtil().setWidth(80),
+                    height: ScreenUtil().setHeight(100),
+                    child: Icon(
+                      Icons.comment,
+                      color: Colors.white,
+                      size: ScreenUtil().setHeight(120),
+                    ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.more_vert,
-                    color: Colors.white,
-                    size: ScreenUtil().setHeight(100),
+                InkWell(
+                  onTap: () {},
+                  child: SizedBox(
+                    width: ScreenUtil().setWidth(80),
+                    height: ScreenUtil().setHeight(100),
+                    child: Icon(
+                      Icons.more_vert,
+                      color: Colors.white,
+                      size: ScreenUtil().setHeight(120),
+                    ),
                   ),
                 ),
               ],
@@ -158,99 +180,124 @@ class _PlayScreenState extends State<PlayScreen> with TickerProviderStateMixin {
             height: ScreenUtil().setWidth(120),
             child: Row(
               children: [
-                SizedBox(
-                  width: ScreenUtil().setWidth(120),
-                  child: Text(
-                    widget.time % 60 < 10
-                        ? '0${widget.time ~/ 60}:0${widget.time % 60}'
-                        : '0${widget.time ~/ 60}:${widget.time % 60}',
-                    style: const TextStyle(color: Colors.white),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      widget.player.timePlayed % 60 < 10
+                          ? '0${widget.player.timePlayed ~/ 60}:0${widget.player.timePlayed % 60}'
+                          : '0${widget.player.timePlayed ~/ 60}:${widget.player.timePlayed % 60}',
+                      style: TextStyle(color: Colors.white,fontSize: ScreenUtil().setWidth(40)),
+                    ),
                   ),
                 ),
                 Expanded(
+                  flex: 5,
                   child: LinearProgressIndicator(
                     value: _progressValue,
                     color: Colors.purpleAccent,
                     backgroundColor: Colors.purple,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.only(left: 5),
-                  width: ScreenUtil().setWidth(120),
-                  child: Text(
-                    songs[widget.index].time % 60 < 10
-                        ? '0${songs[widget.index].time ~/ 60}:0${songs[widget.index].time % 60}'
-                        : '0${songs[widget.index].time ~/ 60}:${songs[widget.index].time % 60}',
-                    style: const TextStyle(color: Colors.white),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      widget.player.audioDurationMS==1?'- - : - -':widget.player.audioDurationMS % 60 < 10
+                          ? '0${widget.player.audioDurationMS ~/ 60}:0${widget.player.audioDurationMS % 60}'
+                          : '0${widget.player.audioDurationMS ~/ 60}:${widget.player.audioDurationMS % 60}',
+                      style: TextStyle(color: Colors.white,fontSize: ScreenUtil().setWidth(40)),
+                    ),
                   ),
                 )
               ],
             ),
           ),
-          SizedBox(
+          Container(
+            padding: EdgeInsets.only(left: ScreenUtil().setWidth(20)),
             width: ScreenUtil().setWidth(1080),
             height: ScreenUtil().setWidth(120),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  onPressed: () {
+                InkWell(
+                  onTap: () {
                     setState(() {
                       isShuffle = !isShuffle;
                     });
                   },
-                  icon: Icon(
-                    isShuffle
-                        ? MdiIcons.shuffleVariant
-                        : MdiIcons.shuffleDisabled,
-                    color: Colors.white,
-                    size: ScreenUtil().setHeight(100),
+                  child: SizedBox(
+                    width: ScreenUtil().setWidth(120),
+                    height: ScreenUtil().setHeight(120),
+                    child: Icon(
+                      isShuffle
+                          ? MdiIcons.shuffleVariant
+                          : MdiIcons.shuffleDisabled,
+                      color: Colors.white,
+                      size: ScreenUtil().setHeight(100),
+                    ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.skip_previous,
-                    color: Colors.white,
-                    size: ScreenUtil().setHeight(100),
+                InkWell(
+                  onTap: () {},
+                  child: SizedBox(
+                    width: ScreenUtil().setWidth(120),
+                    height: ScreenUtil().setHeight(120),
+                    child: Icon(
+                      Icons.skip_previous,
+                      color: Colors.white,
+                      size: ScreenUtil().setHeight(100),
+                    ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () {
+                InkWell(
+                  onTap: () {
                     isPlay = !isPlay;
                     _updateTimeProgress();
                   },
-                  icon: Icon(
-                    isPlay ? Icons.pause : Icons.play_arrow,
-                    color: Colors.white,
-                    size: ScreenUtil().setHeight(100),
+                  child: SizedBox(
+                    width: ScreenUtil().setWidth(120),
+                    height: ScreenUtil().setHeight(120),
+                    child: Icon(
+                      isPlay ? Icons.pause : Icons.play_arrow,
+                      color: Colors.white,
+                      size: ScreenUtil().setHeight(100),
+                    ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () {
+                InkWell(
+                  onTap: () {
                     setState(() {
                       isShuffle
                           ? widget.index = Random().nextInt(songs.length - 1)
                           : widget.index=(widget.index+1)%songs.length;
-                      widget.time=0;
+                      widget.player.stop();
+                      widget.player=AudioAssetPlayer(songs[widget.index].source, 0);
+                      widget.player.init();
                     });
                   },
-                  icon: Icon(
-                    Icons.skip_next,
-                    color: Colors.white,
-                    size: ScreenUtil().setHeight(100),
+                  child: SizedBox(
+                    width: ScreenUtil().setWidth(120),
+                    height: ScreenUtil().setHeight(120),
+                    child: Icon(
+                      Icons.skip_next,
+                      color: Colors.white,
+                      size: ScreenUtil().setHeight(100),
+                    ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () {
+                InkWell(
+                  onTap: () {
                     setState(() {
                       repeatIconTapCount = (repeatIconTapCount + 1) % 3;
                     });
                   },
-                  icon: Icon(
-                    repeat[repeatIconTapCount],
-                    color: Colors.white,
-                    size: ScreenUtil().setHeight(100),
+                  child: SizedBox(
+                    width: ScreenUtil().setWidth(120),
+                    height: ScreenUtil().setHeight(120),
+                    child: Icon(
+                      repeat[repeatIconTapCount],
+                      color: Colors.white,
+                      size: ScreenUtil().setHeight(100),
+                    ),
                   ),
                 ),
               ],
@@ -297,10 +344,10 @@ class _PlayScreenState extends State<PlayScreen> with TickerProviderStateMixin {
               currentTabCallback: (tab) {
                 currentTab = tab;
               },
-              time: widget.time,
               index: widget.index,
               isPlaying: isPlay,
-            )
+              player: widget.player,
+            ),
           ],
         ),
       ),
